@@ -1,0 +1,164 @@
+---
+title: "Introduction to R"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include = F}
+library(learnr)
+```
+
+```{r}
+1 + 1
+```
+
+```{r}
+x <- 1 + 1
+x
+class(x)
+```
+
+Check Global environment
+
+```{r}
+y <- c(1, 2, 3)
+y
+class(y)
+1:3
+```
+
+```{r}
+x + y
+y * y
+```
+
+Vector can also contain characters
+```{r}
+z <- c("a", "b", "c")
+z
+class(z)
+c(z, "d")
+paste(z, "d", sep = "")
+paste(z, y, sep = "")
+```
+
+Subsetting
+```{r}
+y[1] # element 1 of y
+z[2:3] # element 2 to 3 of z
+y[y == 2] # 
+y[y > 1] # y, where y > 1
+y[y ** 2 == 9] # y where y^2 is 9
+
+# multiple ways to do the same thing
+z[-1] # remove first element of z
+z[z != "a"] # z, where z is not a
+z[z > "a"] # z, where z > a in alphabet
+z[z > z[1]] # z, where z > first element of z in alphabet
+z[z == "b" | z == "c"] # z, where z is b or c
+z[z == "b" & z != "a"] # z where z is b and not a
+z[z %in% c("b", "c")] # z, where z in either b or c
+```
+more classes matrix, list
+
+BioLINCC biolincc.nhlbi.nih.gov
+
+```{r}
+fhs <- read.csv(url("https://git.lumc.nl/k.f.dekkers/fos/blob/master/framingham.csv"))
+```
+
+```{r}
+fhs$TenYearCHD <- factor(fhs$TenYearCHD)
+fhs$male <- factor(fhs$male)
+levels(fhs$TenYearCHD) <- c("No", "Yes")
+fhs$education <- factor(fhs$education)
+fhs$currentSmoker <- factor(fhs$currentSmoker)
+fhs$BPMeds <- factor(fhs$BPMeds)
+
+str(fhs)
+summary(fhs)
+dim(fhs)
+head(fhs)
+sum(is.na(fhs))
+
+fhs[1, 1]
+fhs[1:5, ]
+fhs[, 1]
+fhs[, "TenYearCHD"]
+fhs[1:5, c("TenYearCHD", "male", "age")]
+
+fhs <- fhs[complete.cases(fhs), ]
+str(fhs)
+sum(is.na(fhs))
+
+fhs$TenYearCHD
+class(fhs$TenYearCHD)
+table(fhs$TenYearCHD)
+prop.table(table(fhs$TenYearCHD))
+sum(fhs$TenYearCHD == "Yes")
+which(fhs$TenYearCHD == "Yes")
+chd <- fhs[fhs$TenYearCHD == "Yes", ]
+str(chd)
+
+fhs$BMI
+class(fhs$BMI)
+mean(fhs$BMI)
+max(fhs$BMI)
+range(fhs$BMI)
+quantile(fhs$BMI)
+sd(fhs$BMI)
+table(fhs$BMI > 40)
+
+library(ggplot2)
+ggplot(fhs, aes(fhs$BMI)) + geom_histogram(binwidth = 1)
+ggplot(fhs, aes(fhs$BMI)) + geom_density(fill = "black")
+
+
+ggplot(fhs, aes(x = sysBP, y = diaBP)) + geom_point()
+ggplot(fhs, aes(x = TenYearCHD, y = age)) + geom_boxplot()
+ggplot(fhs, aes(x = sysBP, y = diaBP, color = BPMeds)) + geom_point(alpha = 0.5) + 
+  geom_smooth(method = "lm", se = F, color = "black") + ggtitle("Scatter plot") + 
+  scale_color_manual(values = c("blue4", "firebrick1")) + theme_minimal()
+ggplot(fhs, aes(x = TenYearCHD, y = age, fill = TenYearCHD)) + geom_violin(color = NA) + facet_wrap(~male) + 
+  ggtitle("Violin plot") + scale_fill_manual(values = c("blue4", "firebrick1")) + theme_minimal()
+
+with(fhs, cor.test(sysBP, diaBP))
+fit <- lm(sysBP ~ diaBP, fhs)
+summary(fit)
+sqrt(summary(fit)$r.squared)
+12.05509 + 1.45103 * 100
+predict(fit, newdata = data.frame(diaBP = 100), type = "response")
+
+
+t.test(fhs$age[fhs$TenYearCHD == "No"], fhs$age[fhs$TenYearCHD == "Yes"])
+t.test(age ~ TenYearCHD, fhs)
+fit <- glm(TenYearCHD ~ age, data = fhs, family = "binomial")
+summary(fit)
+predict(fit, newdata = data.frame(age = 30), type = "response")
+1 / (1 + exp(-5.719765 + 0.077733 * 30))
+ifelse(predict(fit, newdata = data.frame(age = 30), type = "response") < 0.5, "No", "Yes")
+ifelse(predict(fit, newdata = data.frame(age = 80), type = "response") < 0.5, "No", "Yes")
+
+
+split <- sample(nrow(fhs), round(nrow(fhs) / 3))
+train <- fhs[- split, ]
+test <- fhs[split, ]
+fit.all <- glm(TenYearCHD ~ ., data = train, family = "binomial")
+summary(fit.all)
+probabilities <- predict(fit.all, newdata = test, type = "response")
+predictions <- ifelse(probabilities < 0.5, "No", "Yes")
+accuracy <- sum(test$TenYearCHD == predictions) / nrow(test)
+paste("Accuracy:", round(accuracy, 2))
+prop.table(table(fhs$TenYearCHD))
+```
+
+```{r letter-a, echo = FALSE}
+question("What number is the letter A in the English alphabet?",
+  answer("8"),
+  answer("14"),
+  answer("1", correct = T),
+  answer("23")
+)
+```
+
+![](https://youtu.be/zNzZ1PfUDNk)
